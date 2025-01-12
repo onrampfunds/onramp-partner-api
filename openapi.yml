@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Onramp Funds Partner API
+  description: REST API for Onramp partners.
+  version: 1.0.0
+servers:
+  - url: https://app.onrampfunds.com/partners/api
+    description: Production Server
+paths:
+  /partners/api/tokens:
+    post:
+      summary: Generate a JWT token
+      description: Authenticates a partner and generates a JWT token using the provided client credentials.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_id:
+                  type: string
+                  description: The client ID provided during registration.
+                  example: "your-client-id"
+                client_secret:
+                  type: string
+                  description: The client secret provided during registration.
+                  example: "your-client-secret"
+              required:
+                - client_id
+                - client_secret
+      responses:
+        '200':
+          description: Token generated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: The generated JWT token.
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '401':
+          description: Unauthorized, invalid client credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  error:
+                    type: string
+                    example: "unauthorized"
+                  message:
+                    type: string
+                    example: "Client not authorized"
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 500
+                  error:
+                    type: string
+                    example: "internal_server_error"
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+
+  /partners/api/prospects:
+    post:
+      summary: Create a new prospect and prequalify them for funding
+      description: Submits new prospect details to receive a prequalification amount for funding.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                seller_email_address:
+                  type: string
+                  format: email
+                  description: The seller's email address.
+                  example: "test@example.com"
+                business_name:
+                  type: string
+                  description: The name of the business.
+                  example: "Test Business"
+                seller_tenure_months:
+                  type: string
+                  description: The number of months the seller has been operating.
+                  example: "12"
+                legal_entity:
+                  type: string
+                  description: The type of legal entity of the business.
+                  enum: [sole_proprietorship, partnership, corporation, llc]
+                  example: "corporation"
+                incorporation_state:
+                  type: string
+                  description: The state where the business is incorporated.
+                  example: "CA"
+                platforms:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: The type of platform (e.g., Shopify, Amazon).
+                        example: "shopify"
+                      seller_id:
+                        type: string
+                        description: The seller ID on the platform.
+                        example: "123"
+                      sales:
+                        type: object
+                        additionalProperties:
+                          type: number
+                          description: Sales data for the corresponding month (YYYYMM format).
+                        example:
+                          "202301": 1000.12
+              required:
+                - seller_email_address
+                - business_name
+                - seller_tenure_months
+                - legal_entity
+                - incorporation_state
+                - platforms
+      responses:
+        '201':
+          description: Prospect data submitted successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  business_name:
+                    type: string
+                    description: The name of the business.
+                    example: "Test Business"
+                  legal_entity:
+                    type: string
+                    description: The legal entity of the business.
+                    example: "corporation"
+                  incorporation_state:
+                    type: string
+                    description: The state where the business is incorporated.
+                    example: "CA"
+                  platforms:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: The type of platform.
+                          example: "shopify"
+                        seller_id:
+                          type: string
+                          description: The seller ID on the platform.
+                          example: "123"
+                        sales:
+                          type: object
+                          additionalProperties:
+                            type: number
+                            description: Sales data for the corresponding month (YYYYMM format).
+                          example:
+                            "202301": 1000.12
+                  seller_email:
+                    type: string
+                    format: email
+                    description: The seller's email address.
+                    example: "test@example.com"
+                  seller_tenure_months:
+                    type: integer
+                    description: The number of months the seller has been operating.
+                    example: 60
+                  prequalified_amount:
+                    type: number
+                    description: The prequalified amount for the business.
+                    example: 12500.0
+                  correlation_id:
+                    type: string
+                    description: The correlation ID for tracking.
+                    example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
+        '422':
+          description: Validation failed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 422
+                  error:
+                    type: string
+                    example: "validation_error"
+                  message:
+                    type: string
+                    example: "Validation failed"
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+                    example:
+                      name:
+                        - "can't be blank"
+                      age:
+                        - "is not a number"
+        '401':
+          description: Unauthorized, invalid or missing JWT token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  error:
+                    type: string
+                    example: "unauthorized"
+                  message:
+                    type: string
+                    example: "Client not authorized"
+        '400':
+          description: Bad request, invalid data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 400
+                  error:
+                    type: string
+                    example: "bad_request"
+                  message:
+                    type: string
+                    example: "Invalid input data provided."
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 500
+                  error:
+                    type: string
+                    example: "internal_server_error"
+                  message:
+                    type: string
+                    example: "An unexpected error occurred."
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
