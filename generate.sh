@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set variables for file paths
-OPENAPI_FILE="../onrampfunds/app/models/partner/api/openapi.yml"
+OPENAPI_FILE="./openapi.yml"
 OUTPUT_FILE="index.html"
 
 # Check if the OpenAPI file exists
