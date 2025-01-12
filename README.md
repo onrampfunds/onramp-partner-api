@@ -1,7 +1,11 @@
+### Onramp Funds Partner API Documentation
+
 This repo hosts the documentation for Onramp Funds' Partner API.
 
 To regenerate documentation, run the script and push the changes back to Github.
 
-`./generate.sh`
+View at:
 
-**Note:** You must have the `onrampfunds` repo checked out locally first.
+https://refactored-couscous-y65782e.pages.github.io/
+
+`./generate.sh`
