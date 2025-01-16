@@ -123,12 +123,17 @@ paths:
                         description: The seller ID on the platform.
                         example: "123"
                       sales:
-                        type: object
-                        additionalProperties:
-                          type: number
-                          description: Sales data for the corresponding month (YYYYMM format).
-                        example:
-                          "202301": 1000.12
+                        oneOf:
+                          - type: object
+                            additionalProperties:
+                              type: number
+                              description: Sales data for the corresponding month (YYYYMM format).
+                            example:
+                              "202301": 1000.12
+                          - type: number
+                            minimum: 0
+                            description: The last 90-day sales total.
+                            example: 12000.50
               required:
                 - seller_email_address
                 - business_name
@@ -170,12 +175,17 @@ paths:
                           description: The seller ID on the platform.
                           example: "123"
                         sales:
-                          type: object
-                          additionalProperties:
-                            type: number
-                            description: Sales data for the corresponding month (YYYYMM format).
-                          example:
-                            "202301": 1000.12
+                          oneOf:
+                            - type: object
+                              additionalProperties:
+                                type: number
+                                description: Sales data for the corresponding month (YYYYMM format).
+                              example:
+                                "202301": 1000.12
+                            - type: number
+                              minimum: 0
+                              description: The last 90-day sales total.
+                              example: 12000.50
                   seller_email:
                     type: string
                     format: email
