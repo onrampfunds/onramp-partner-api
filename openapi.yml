@@ -21,11 +21,11 @@ paths:
                 client_id:
                   type: string
                   description: The client ID provided during registration.
-                  example: "your-client-id"
+                  example: "P6KgcP7wQXkbhufpCYLpiSgC"
                 client_secret:
                   type: string
                   description: The client secret provided during registration.
-                  example: "your-client-secret"
+                  example: "$2a$12$BoCljYIBQXQbNebC6d2mf.N4TIHWe5jDM6dPTzzMOLwV9tRFPBPYW"
               required:
                 - client_id
                 - client_secret
@@ -123,17 +123,15 @@ paths:
                         description: The seller ID on the platform.
                         example: "123"
                       sales:
-                        oneOf:
-                          - type: object
-                            additionalProperties:
-                              type: number
-                              description: Sales data for the corresponding month (YYYYMM format).
-                            example:
-                              "202301": 1000.12
-                          - type: number
-                            minimum: 0
-                            description: The last 90-day sales total.
-                            example: 12000.50
+                        type: object
+                        description: Sales data for the platform.
+                        additionalProperties:
+                          type: number
+                          description: Sales data for the period. Accepted keys are `90_days`, `180_days`, or a month in the `YYYYMM` format.
+                        example:
+                          90_days: 15000.50
+                          180_days: 30000.75
+                          "202301": 12000.30
               required:
                 - seller_email_address
                 - business_name
@@ -175,17 +173,13 @@ paths:
                           description: The seller ID on the platform.
                           example: "123"
                         sales:
-                          oneOf:
-                            - type: object
-                              additionalProperties:
-                                type: number
-                                description: Sales data for the corresponding month (YYYYMM format).
-                              example:
-                                "202301": 1000.12
-                            - type: number
-                              minimum: 0
-                              description: The last 90-day sales total.
-                              example: 12000.50
+                          type: object
+                          additionalProperties:
+                            type: number
+                            description: Sales data for the period. Accepted keys are `90_days`, `180_days`, or a month in the `YYYYMM` format.
+                          example:
+                            90_days: 15000.50
+                            "202301": 12000.30
                   seller_email:
                     type: string
                     format: email
