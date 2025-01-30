@@ -6,6 +6,6 @@ To regenerate documentation, run the script and push the changes back to Github.
 
 View at:
 
-https://refactored-couscous-y65782e.pages.github.io/
+https://onrampfunds.github.io/onramp-partner-api/
 
 `./generate.sh`
