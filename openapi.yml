@@ -74,10 +74,10 @@ paths:
                     type: string
                     example: "An unexpected error occurred."
 
-  /partners/api/prospects:
+  /partners/api/referrals:
     post:
-      summary: Create a new prospect and prequalify them for funding
-      description: Submits new prospect details to receive a prequalification amount for funding.
+      summary: Create a new referral and prequalify them for funding
+      description: Submits new referral details to receive a prequalification amount for funding.
       security:
         - bearerAuth: []
       requestBody:
@@ -141,7 +141,7 @@ paths:
                 - platforms
       responses:
         '201':
-          description: Prospect data submitted successfully.
+          description: Referral data submitted successfully.
           content:
             application/json:
               schema:
