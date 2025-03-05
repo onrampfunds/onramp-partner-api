@@ -180,6 +180,11 @@ paths:
                           example:
                             90_days: 15000.50
                             "202301": 12000.30
+                  referral_url:
+                    type: string
+                    format: url
+                    description: The referral URL.
+                    example: "https://app.onrampfunds.com/partners/referrals/2c9044f4-fb37-4e6e-a18b-23bab8270b80"
                   seller_email:
                     type: string
                     format: email
