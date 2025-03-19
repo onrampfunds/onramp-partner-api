@@ -30,7 +30,7 @@ paths:
                 - client_id
                 - client_secret
       responses:
-        '200':
+        "200":
           description: Token generated successfully.
           content:
             application/json:
@@ -41,7 +41,7 @@ paths:
                     type: string
                     description: The generated JWT token.
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        '401':
+        "401":
           description: Unauthorized, invalid client credentials.
           content:
             application/json:
@@ -57,7 +57,7 @@ paths:
                   message:
                     type: string
                     example: "Client not authorized"
-        '500':
+        "500":
           description: Internal server error.
           content:
             application/json:
@@ -87,7 +87,7 @@ paths:
             schema:
               type: object
               properties:
-                seller_email_address:
+                seller_email:
                   type: string
                   format: email
                   description: The seller's email address.
@@ -104,6 +104,18 @@ paths:
                   type: string
                   description: The last name of the business's contact.
                   example: "Doe"
+                contact_phone_number:
+                  type: string
+                  description: The phone number of the business's contact.
+                  example: "Doe"
+                ecommerce_seller:
+                  type: boolean
+                  description: Is the business eCommerce?
+                  example: true
+                desired_amount:
+                  type: number
+                  description: How much cash is the business looking for (if known)?
+                  example: 12500.0
                 seller_tenure_months:
                   type: string
                   description: The number of months the seller has been operating.
@@ -117,6 +129,13 @@ paths:
                   type: string
                   description: The state where the business is incorporated.
                   example: "CA"
+                planned_use_of_funds:
+                  type: array
+                  description: What are the planned use of funds?
+                  items:
+                    type: string
+                    enum: [inventory, marketing, other]
+                    example: inventory
                 platforms:
                   type: array
                   items:
@@ -140,15 +159,14 @@ paths:
                           90_days: 15000.50
                           180_days: 30000.75
                           "202301": 12000.30
+                user_provided_average_monthly_sales:
+                  type: number
+                  description: What are the average monthly sales for the business?
+                  example: 12500.0
               required:
-                - seller_email_address
-                - business_name
-                - seller_tenure_months
-                - legal_entity
-                - incorporation_state
-                - platforms
+                - seller_email
       responses:
-        '201':
+        "201":
           description: Referral data submitted successfully.
           content:
             application/json:
@@ -167,6 +185,17 @@ paths:
                     type: string
                     description: The last name of the business's contact.
                     example: "Doe"
+                  contact_phone_number:
+                    type: string
+                    description: The phone number of the business's contact.
+                    example: "Doe"
+                  ecommerce_seller:
+                    type: boolean
+                    description: Is the business eCommerce?
+                  desired_amount:
+                    type: number
+                    description: How much cash is the business looking for (if known)?
+                    example: 12500.0
                   legal_entity:
                     type: string
                     description: The legal entity of the business.
@@ -174,6 +203,13 @@ paths:
                     type: string
                     description: The state where the business is incorporated.
                     example: "CA"
+                  planned_use_of_funds:
+                    type: array
+                    description: What are the planned use of funds?
+                    items:
+                      type: string
+                      enum: [inventory, marketing, other]
+                      example: inventory
                   platforms:
                     type: array
                     items:
@@ -213,11 +249,15 @@ paths:
                     type: number
                     description: The prequalified amount for the business.
                     example: 12500.0
+                  user_provided_average_monthly_sales:
+                    type: number
+                    description: What are the average monthly sales for the business?
+                    example: 12500.0
                   correlation_id:
                     type: string
                     description: The correlation ID for tracking.
                     example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
-        '422':
+        "422":
           description: Validation failed.
           content:
             application/json:
@@ -244,7 +284,7 @@ paths:
                         - "can't be blank"
                       age:
                         - "is not a number"
-        '401':
+        "401":
           description: Unauthorized, invalid or missing JWT token.
           content:
             application/json:
@@ -260,7 +300,7 @@ paths:
                   message:
                     type: string
                     example: "Client not authorized"
-        '400':
+        "400":
           description: Bad request, invalid data.
           content:
             application/json:
@@ -276,7 +316,7 @@ paths:
                   message:
                     type: string
                     example: "Invalid input data provided."
-        '500':
+        "500":
           description: Internal server error.
           content:
             application/json:
