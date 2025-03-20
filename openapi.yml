@@ -107,7 +107,7 @@ paths:
                 contact_phone_number:
                   type: string
                   description: The phone number of the business's contact.
-                  example: "Doe"
+                  example: "3243243243"
                 ecommerce_seller:
                   type: boolean
                   description: Is the business eCommerce?
@@ -188,7 +188,7 @@ paths:
                   contact_phone_number:
                     type: string
                     description: The phone number of the business's contact.
-                    example: "Doe"
+                    example: "3243243243"
                   ecommerce_seller:
                     type: boolean
                     description: Is the business eCommerce?
