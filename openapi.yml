@@ -163,6 +163,83 @@ paths:
                   type: number
                   description: What are the average monthly sales for the business?
                   example: 12500.0
+                registered_business_name:
+                  type: string
+                  description: The official registered business name in the Secretary of State.
+                  example: "Test Business LLC"
+                ein:
+                  type: string
+                  description: The business's Employee Identification Number or Tax ID.
+                  example: "12-3456789"
+                sos_filing_number:
+                  type: string
+                  description: The Secretary of State filing number.
+                  example: "ABC123"
+                industry:
+                  type: string
+                  description: The industry where the business operates.
+                  example: "ecommerce"
+                operating_street_address:
+                  type: string
+                  description: The street address where the business operates.
+                  example: "123 Main St"
+                operating_secondary_address:
+                  type: string
+                  description: The secondary address where the business operates.
+                  example: "Suite 100"
+                operating_city:
+                  type: string
+                  description: The city where the business operates.
+                  example: "San Francisco"
+                operating_state:
+                  type: string
+                  description: The state where the business operates.
+                  example: "CA"
+                operating_zip:
+                  type: string
+                  description: The zip where the business operates.
+                  example: "94105"
+                mailing_street_address:
+                  type: string
+                  description: The street address where the business receives mail, if different than the operating address.
+                  example: "456 Market St"
+                mailing_secondary_address:
+                  type: string
+                  description: The secondary address where the business receives mail, if different than the operating address.
+                  example: "Floor 2"
+                mailing_city:
+                  type: string
+                  description: The city where the business receives mail, if different than the operating address.
+                  example: "San Francisco"
+                mailing_state:
+                  type: string
+                  description: The state where the business receives mail, if different than the operating address.
+                  example: "CA"
+                mailing_zip:
+                  type: string
+                  description: The zip where the business receives mail, if different than the operating address.
+                  example: "94105"
+                controller_title:
+                  type: string
+                  description: The controller's title.
+                  example: "CEO"
+                controller_dob:
+                  type: string
+                  format: date
+                  description: The controller's Date of Birth.
+                  example: "1980-01-01"
+                controller_ssn:
+                  type: string
+                  description: The controller's SSN, if they have one.
+                  example: "123-45-6789"
+                controller_passport_number:
+                  type: string
+                  description: The controller's Passport Number, if they do not have a SSN.
+                  example: "123456789"
+                controller_passport_country:
+                  type: string
+                  description: The controller's Passport Country, if they do not have a SSN.
+                  example: "US"
               required:
                 - seller_email
       responses:
@@ -257,6 +334,83 @@ paths:
                     type: string
                     description: The correlation ID for tracking.
                     example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
+                  registered_business_name:
+                    type: string
+                    description: The official registered business name in the Secretary of State.
+                    example: "Test Business LLC"
+                  ein:
+                    type: string
+                    description: The business's Employee Identification Number or Tax ID.
+                    example: "12-3456789"
+                  sos_filing_number:
+                    type: string
+                    description: The Secretary of State filing number.
+                    example: "ABC123"
+                  industry:
+                    type: string
+                    description: The industry where the business operates.
+                    example: "ecommerce"
+                  operating_street_address:
+                    type: string
+                    description: The street address where the business operates.
+                    example: "123 Main St"
+                  operating_secondary_address:
+                    type: string
+                    description: The secondary address where the business operates.
+                    example: "Suite 100"
+                  operating_city:
+                    type: string
+                    description: The city where the business operates.
+                    example: "San Francisco"
+                  operating_state:
+                    type: string
+                    description: The state where the business operates.
+                    example: "CA"
+                  operating_zip:
+                    type: string
+                    description: The zip where the business operates.
+                    example: "94105"
+                  mailing_street_address:
+                    type: string
+                    description: The street address where the business receives mail, if different than the operating address.
+                    example: "456 Market St"
+                  mailing_secondary_address:
+                    type: string
+                    description: The secondary address where the business receives mail, if different than the operating address.
+                    example: "Floor 2"
+                  mailing_city:
+                    type: string
+                    description: The city where the business receives mail, if different than the operating address.
+                    example: "San Francisco"
+                  mailing_state:
+                    type: string
+                    description: The state where the business receives mail, if different than the operating address.
+                    example: "CA"
+                  mailing_zip:
+                    type: string
+                    description: The zip where the business receives mail, if different than the operating address.
+                    example: "94105"
+                  controller_title:
+                    type: string
+                    description: The controller's title.
+                    example: "CEO"
+                  controller_dob:
+                    type: string
+                    format: date
+                    description: The controller's Date of Birth.
+                    example: "1980-01-01"
+                  controller_ssn:
+                    type: string
+                    description: The controller's SSN, if they have one.
+                    example: "123-45-6789"
+                  controller_passport_number:
+                    type: string
+                    description: The controller's Passport Number, if they do not have a SSN.
+                    example: "123456789"
+                  controller_passport_country:
+                    type: string
+                    description: The controller's Passport Country, if they do not have a SSN.
+                    example: "US"
         "422":
           description: Validation failed.
           content:
