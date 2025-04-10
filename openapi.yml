@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Onramp Funds Partner API
   description: REST API for Onramp partners.
@@ -127,7 +127,8 @@ paths:
                   example: "corporation"
                 incorporation_state:
                   type: string
-                  description: The state where the business is incorporated.
+                  description: The state where the business is incorporated. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
                   example: "CA"
                 planned_use_of_funds:
                   type: array
@@ -163,6 +164,180 @@ paths:
                   type: number
                   description: What are the average monthly sales for the business?
                   example: 12500.0
+                registered_business_name:
+                  type: string
+                  description: The official registered business name in the Secretary of State.
+                  example: "Test Business LLC"
+                ein:
+                  type: string
+                  description: The business's Employee Identification Number or Tax ID. Must be in format XX-XXXXXXX.
+                  pattern: ^\d{2}-\d{7}$
+                  example: "12-3456789"
+                sos_filing_number:
+                  type: string
+                  description: The Secretary of State filing number.
+                  example: "ABC123"
+                industry:
+                  type: string
+                  description: The industry where the business operates. Must be one of the valid industry values.
+                  enum:
+                    - "All Other General Merchandise Stores"
+                    - "All Other Health and Personal Care Stores"
+                    - "All Other Miscellaneous Store Retailers (except Tobacco Stores)"
+                    - "All Other Specialty Food Stores"
+                    - "Automotive Parts and Accessories Stores"
+                    - "Beer, Wine, and Liquor Stores"
+                    - "Book Stores"
+                    - "Children's and Infants' Clothing Stores"
+                    - "Clothing Accessories Stores"
+                    - "Clothing Stores"
+                    - "Cosmetics, Beauty Supplies, and Perfume Stores"
+                    - "Electronics and Appliance Stores"
+                    - "Electronics Stores"
+                    - "Fish and Seafood Markets"
+                    - "Fruit and Vegetable Markets"
+                    - "Gift, Novelty, and Souvenir Stores"
+                    - "Grocery Stores"
+                    - "Hardware Stores"
+                    - "Health and Personal Care Stores"
+                    - "Hobby, Toy, and Game Stores"
+                    - "Home Furnishings Stores"
+                    - "Household Appliance Stores"
+                    - "Jewelry Stores"
+                    - "Jewelry, Luggage, and Leather Goods Stores"
+                    - "Lawn and Garden Equipment and Supplies Stores"
+                    - "Luggage and Leather Goods Stores"
+                    - "Men's Clothing Stores"
+                    - "Musical Instrument and Supplies Stores"
+                    - "Nursery, Garden Center, and Farm Supply Stores"
+                    - "Office Supplies, Stationery, and Gift Stores"
+                    - "Optical Goods Stores"
+                    - "Other Clothing Stores"
+                    - "Other Miscellaneous Store Retailers"
+                    - "Outdoor Power Equipment Stores"
+                    - "Pet and Pet Supplies Stores"
+                    - "Pharmacies and Drug Stores"
+                    - "Sewing, Needlework, and Piece Goods Stores"
+                    - "Shoe Stores"
+                    - "Specialty Food Stores"
+                    - "Sporting Goods Stores"
+                    - "Tobacco Stores"
+                    - "Used Merchandise Stores"
+                    - "Women's Clothing Stores"
+                  example: "Clothing Stores"
+                operating_street_address:
+                  type: string
+                  description: The street address where the business operates.
+                  example: "123 Main St"
+                operating_secondary_address:
+                  type: string
+                  description: The secondary address where the business operates.
+                  example: "Suite 100"
+                operating_city:
+                  type: string
+                  description: The city where the business operates.
+                  example: "San Francisco"
+                operating_state:
+                  type: string
+                  description: The state where the business operates. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
+                  example: "CA"
+                operating_zip:
+                  type: string
+                  description: The zip where the business operates.
+                  example: "94105"
+                mailing_street_address:
+                  type: string
+                  description: The street address where the business receives mail, if different than the operating address.
+                  example: "456 Market St"
+                mailing_secondary_address:
+                  type: string
+                  description: The secondary address where the business receives mail, if different than the operating address.
+                  example: "Floor 2"
+                mailing_city:
+                  type: string
+                  description: The city where the business receives mail, if different than the operating address.
+                  example: "San Francisco"
+                mailing_state:
+                  type: string
+                  description: The state where the business receives mail, if different than the operating address. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
+                  example: "CA"
+                mailing_zip:
+                  type: string
+                  description: The zip where the business receives mail, if different than the operating address.
+                  example: "94105"
+                controller_title:
+                  type: string
+                  description: The controller's title.
+                  example: "CEO"
+                controller_dob:
+                  type: string
+                  format: date
+                  description: The controller's Date of Birth.
+                  example: "01/01/1980"
+                controller_ssn:
+                  type: string
+                  description: The controller's SSN, if they have one. Must be in format XXX-XX-XXXX.
+                  pattern: ^\d{3}-\d{2}-\d{4}$
+                  example: "123-45-6789"
+                controller_2_ssn:
+                  type: string
+                  description: The second controller's SSN, if they have one. Must be in format XXX-XX-XXXX.
+                  pattern: ^\d{3}-\d{2}-\d{4}$
+                  example: "987-65-4321"
+                controller_passport_number:
+                  type: string
+                  description: The controller's Passport Number, if they do not have a SSN.
+                  example: "123456789"
+                controller_passport_country:
+                  type: string
+                  description: The controller's Passport Country, if they do not have a SSN.
+                  enum: ["US"]
+                  example: "US"
+                business_dba:
+                  type: string
+                  description: The businesses DBA, if any.
+                  example: "Test Business DBA"
+                controller_2_first_name:
+                  type: string
+                  description: The first name of the second controller.
+                  example: "Jane"
+                controller_2_last_name:
+                  type: string
+                  description: The last name of the second controller.
+                  example: "Smith"
+                controller_2_dob:
+                  type: string
+                  format: date
+                  description: The second controller's date of birth.
+                  example: "02/02/1982"
+                controller_2_passport_number:
+                  type: string
+                  description: The second controller's Passport Number, if they do not have a SSN.
+                  example: "P987654321"
+                controller_2_passport_country:
+                  type: string
+                  description: The second controller's Passport Country, if they do not have a SSN.
+                  enum: ["US"]
+                  example: "US"
+                controller_2_street_address:
+                  type: string
+                  description: The street address where the second controller resides.
+                  example: "789 Oak St"
+                controller_2_city:
+                  type: string
+                  description: The city where the second controller resides.
+                  example: "San Francisco"
+                controller_2_state:
+                  type: string
+                  description: The state where the second controller resides. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
+                  example: "CA"
+                controller_2_zip:
+                  type: string
+                  description: The zip where the second controller resides.
+                  example: "94105"
               required:
                 - seller_email
       responses:
@@ -253,10 +428,134 @@ paths:
                     type: number
                     description: What are the average monthly sales for the business?
                     example: 12500.0
+                  controller_passport_country:
+                    type: string
+                    description: The controller's Passport Country, if they do not have a SSN.
+                    example: "US"
                   correlation_id:
                     type: string
                     description: The correlation ID for tracking.
                     example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
+                  registered_business_name:
+                    type: string
+                    description: The official registered business name in the Secretary of State.
+                    example: "Test Business LLC"
+                  ein:
+                    type: string
+                    description: The business's Employee Identification Number or Tax ID.
+                    example: "12-3456789"
+                  sos_filing_number:
+                    type: string
+                    description: The Secretary of State filing number.
+                    example: "ABC123"
+                  industry:
+                    type: string
+                    description: The industry where the business operates.
+                    example: "Clothing Stores"
+                  operating_street_address:
+                    type: string
+                    description: The street address where the business operates.
+                    example: "123 Main St"
+                  operating_secondary_address:
+                    type: string
+                    description: The secondary address where the business operates.
+                    example: "Suite 100"
+                  operating_city:
+                    type: string
+                    description: The city where the business operates.
+                    example: "San Francisco"
+                  operating_state:
+                    type: string
+                    description: The state where the business operates.
+                    example: "CA"
+                  operating_zip:
+                    type: string
+                    description: The zip where the business operates.
+                    example: "94105"
+                  mailing_street_address:
+                    type: string
+                    description: The street address where the business receives mail, if different than the operating address.
+                    example: "456 Market St"
+                  mailing_secondary_address:
+                    type: string
+                    description: The secondary address where the business receives mail, if different than the operating address.
+                    example: "Floor 2"
+                  mailing_city:
+                    type: string
+                    description: The city where the business receives mail, if different than the operating address.
+                    example: "San Francisco"
+                  mailing_state:
+                    type: string
+                    description: The state where the business receives mail, if different than the operating address.
+                    example: "CA"
+                  mailing_zip:
+                    type: string
+                    description: The zip where the business receives mail, if different than the operating address.
+                    example: "94105"
+                  controller_title:
+                    type: string
+                    description: The controller's title.
+                    example: "CEO"
+                  controller_dob:
+                    type: string
+                    format: date
+                    description: The controller's Date of Birth.
+                    example: "01/01/1980"
+                  controller_ssn:
+                    type: string
+                    description: The controller's SSN, if they have one.
+                    example: "123-45-6789"
+                  controller_passport_number:
+                    type: string
+                    description: The controller's Passport Number, if they do not have a SSN.
+                    example: "123456789"
+                  business_dba:
+                    type: string
+                    description: The businesses DBA, if any.
+                    example: "Test Business DBA"
+                  controller_2_first_name:
+                    type: string
+                    description: The first name of the second controller.
+                    example: "Jane"
+                  controller_2_last_name:
+                    type: string
+                    description: The last name of the second controller.
+                    example: "Smith"
+                  controller_2_dob:
+                    type: string
+                    format: date
+                    description: The second controller's date of birth.
+                    example: "02/02/1982"
+                  controller_2_ssn:
+                    type: string
+                    description: The second controller's SSN, if they have one. Must be in format XXX-XX-XXXX.
+                    pattern: ^\d{3}-\d{2}-\d{4}$
+                    example: "987-65-4321"
+                  controller_2_passport_number:
+                    type: string
+                    description: The second controller's Passport Number, if they do not have a SSN.
+                    example: "P987654321"
+                  controller_2_passport_country:
+                    type: string
+                    description: The second controller's Passport Country, if they do not have a SSN.
+                    enum: ["US"]
+                    example: "US"
+                  controller_2_street_address:
+                    type: string
+                    description: The street address where the second controller resides.
+                    example: "789 Oak St"
+                  controller_2_city:
+                    type: string
+                    description: The city where the second controller resides.
+                    example: "San Francisco"
+                  controller_2_state:
+                    type: string
+                    description: The state where the second controller resides.
+                    example: "CA"
+                  controller_2_zip:
+                    type: string
+                    description: The zip where the second controller resides.
+                    example: "94105"
         "422":
           description: Validation failed.
           content:
