@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: Onramp Funds Partner API
   description: REST API for Onramp partners.
@@ -127,7 +127,8 @@ paths:
                   example: "corporation"
                 incorporation_state:
                   type: string
-                  description: The state where the business is incorporated.
+                  description: The state where the business is incorporated. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
                   example: "CA"
                 planned_use_of_funds:
                   type: array
@@ -238,7 +239,8 @@ paths:
                   example: "San Francisco"
                 operating_state:
                   type: string
-                  description: The state where the business operates.
+                  description: The state where the business operates. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
                   example: "CA"
                 operating_zip:
                   type: string
@@ -258,7 +260,8 @@ paths:
                   example: "San Francisco"
                 mailing_state:
                   type: string
-                  description: The state where the business receives mail, if different than the operating address.
+                  description: The state where the business receives mail, if different than the operating address. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
                   example: "CA"
                 mailing_zip:
                   type: string
@@ -328,7 +331,8 @@ paths:
                   example: "San Francisco"
                 controller_2_state:
                   type: string
-                  description: The state where the second controller resides.
+                  description: The state where the second controller resides. Must be a two character US state code.
+                  enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
                   example: "CA"
                 controller_2_zip:
                   type: string
