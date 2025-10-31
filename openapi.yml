@@ -4,7 +4,7 @@ info:
   description: REST API for Onramp partners.
   version: 1.0.0
 servers:
-  - url: https://app.onrampfunds.com/partners/api
+  - url: https://app.onrampfunds.com/
     description: Production Server
 paths:
   /partners/api/tokens:
