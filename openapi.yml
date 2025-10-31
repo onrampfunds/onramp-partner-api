@@ -1,10 +1,307 @@
 openapi: 3.1.0
 info:
   title: Onramp Funds Partner API
-  description: REST API for Onramp partners.
+  description: |
+    # Overview
+
+    The Onramp Funds Partner API enables partners to submit referrals for business funding and receive prequalification amounts. This REST API uses JWT authentication and provides a streamlined workflow for processing funding applications.
+
+    ## Who Is This API For?
+
+    This API is designed for Onramp partners who want to:
+    - Submit seller referrals programmatically
+    - Receive instant prequalification amounts
+    - Integrate Onramp funding into their platform
+
+    ---
+
+    ## Getting Started
+
+    ### Prerequisites
+
+    Before using the API, you need:
+    1. **Partner Account** - Register with Onramp Funds as a partner
+    2. **API Credentials** - You'll receive a `client_id` and `client_secret`
+    3. **HTTPS Support** - All API calls must be made over HTTPS
+
+    ### Base URL
+
+    ```
+    https://app.onrampfunds.com/
+    ```
+
+    ---
+
+    ## Authentication
+
+    The API uses **JWT (JSON Web Token)** authentication. You must obtain a token before making API calls.
+
+    ### How Authentication Works
+
+    1. **Obtain Credentials** - Receive your `client_id` and `client_secret` from Onramp
+    2. **Generate Token** - Use the `/partners/api/tokens` endpoint to get a JWT token
+    3. **Use Token** - Include the token in the `Authorization` header for subsequent requests
+
+    ### Token Generation Example
+
+    ```bash
+    curl -X POST https://app.onrampfunds.com/partners/api/tokens \
+      -H "Content-Type: application/json" \
+      -d '{
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET"
+      }'
+    ```
+
+    **Response:**
+    ```json
+    {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+
+    ### Using Your Token
+
+    Include the token in the Authorization header for authenticated endpoints:
+
+    ```
+    Authorization: Bearer YOUR_JWT_TOKEN
+    ```
+
+    **Important:** Store your credentials securely. Never expose them in client-side code or public repositories.
+
+    ---
+
+    ## API Workflow
+
+    ### Step-by-Step Guide
+
+    **Step 1: Generate Authentication Token**
+
+    Make a POST request to `/partners/api/tokens` with your credentials.
+
+    **Step 2: Create a Referral**
+
+    Submit referral details to `/partners/api/referrals` with the following information:
+    - Seller email and business details
+    - Legal entity information
+    - Platform sales data (e.g., Shopify, Amazon)
+    - Optional: Additional business details for enhanced prequalification
+
+    **Step 3: Receive Prequalification**
+
+    The API responds with:
+    - Prequalified funding amount
+    - Correlation ID for tracking
+    - Referral URL for the seller
+    - Submitted referral details
+
+    ### Complete Example
+
+    ```bash
+    # Step 1: Get token
+    TOKEN=$(curl -X POST https://app.onrampfunds.com/partners/api/tokens \
+      -H "Content-Type: application/json" \
+      -d '{
+        "client_id": "YOUR_CLIENT_ID",
+        "client_secret": "YOUR_CLIENT_SECRET"
+      }' | jq -r '.token')
+
+    # Step 2: Create referral (minimal example)
+    curl -X POST https://app.onrampfunds.com/partners/api/referrals \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer $TOKEN" \
+      -d '{
+        "seller_email": "seller@example.com",
+        "business_name": "Example Business Inc",
+        "seller_tenure_months": "24",
+        "legal_entity": "llc",
+        "incorporation_state": "CA",
+        "platforms": [{
+          "type": "shopify",
+          "seller_id": "shop_12345",
+          "sales": {
+            "90_days": 45000.00,
+            "180_days": 85000.00
+          }
+        }]
+      }'
+    ```
+
+    **Response:**
+    ```json
+    {
+      "business_name": "Example Business Inc",
+      "legal_entity": "llc",
+      "incorporation_state": "CA",
+      "prequalified_amount": 15000.00,
+      "referral_url": "https://app.onrampfunds.com/partners/referrals/...",
+      "correlation_id": "065a417b-ce17-4c64-b8dd-e35a3128a021"
+    }
+    ```
+
+    ### Using the Referral URL
+
+    Once you receive the response, you need to direct the seller to the `referral_url` to complete their funding application. You can do this in two ways:
+
+    **Option 1: Redirect the User**
+    ```javascript
+    // Redirect the user immediately after receiving the response
+    window.location.href = response.referral_url;
+    ```
+
+    **Option 2: Provide a Link**
+    ```html
+    <!-- Display a link for the user to click -->
+    <a href="https://app.onrampfunds.com/partners/referrals/...">
+      Continue to complete your funding application
+    </a>
+    ```
+
+    The referral URL is a unique, personalized link for each seller that:
+    - Contains their pre-filled information
+    - Shows their prequalified amount
+    - Guides them through the funding application process
+    - Tracks the referral back to your partner account
+
+    ---
+
+    ## Required vs Optional Fields
+
+    ### Minimum Required Fields
+
+    To create a referral, you only need to provide:
+    - `seller_email` - The seller's email address
+
+    ### Recommended Fields for Better Prequalification
+
+    For more accurate prequalification amounts, include:
+    - `business_name` - Business name
+    - `seller_tenure_months` - How long the business has been operating
+    - `legal_entity` - Legal structure (sole_proprietorship, partnership, corporation, llc)
+    - `incorporation_state` - State of incorporation
+    - `platforms` - Sales data from e-commerce platforms
+
+    ### Enhanced Fields
+
+    For the most comprehensive prequalification and faster processing, consider including:
+    - Business identification (EIN, registered business name, SOS filing number)
+    - Operating and mailing addresses
+    - Controller information (title, DOB, identification)
+    - Industry classification
+    - Desired funding amount and planned use of funds
+
+    ---
+
+    ## Sales Data Format
+
+    The `sales` field in platform objects accepts flexible time periods:
+
+    - **Aggregate periods**: `90_days`, `180_days`
+    - **Monthly data**: Use `YYYYMM` format (e.g., `"202401"` for January 2024)
+
+    **Example:**
+    ```json
+    "sales": {
+      "90_days": 45000.00,
+      "180_days": 85000.00,
+      "202401": 12000.00,
+      "202402": 15000.00,
+      "202403": 18000.00
+    }
+    ```
+
+    ---
+
+    ## Error Handling
+
+    The API uses standard HTTP status codes and returns detailed error information.
+
+    ### Common HTTP Status Codes
+
+    | Status Code | Meaning | Action |
+    |-------------|---------|--------|
+    | `200` | Success | Request processed successfully |
+    | `201` | Created | Referral created successfully |
+    | `400` | Bad Request | Check request format and data types |
+    | `401` | Unauthorized | Verify credentials or token validity |
+    | `422` | Validation Error | Review validation errors in response |
+    | `500` | Server Error | Contact Onramp support if persists |
+
+    ### Error Response Format
+
+    ```json
+    {
+      "status": 422,
+      "error": "validation_error",
+      "message": "Validation failed",
+      "errors": {
+        "seller_email": ["can't be blank"],
+        "legal_entity": ["is not included in the list"]
+      }
+    }
+    ```
+
+    ### Common Issues
+
+    **401 Unauthorized**
+    - Token expired or invalid
+    - Missing Authorization header
+    - Invalid client credentials
+
+    **422 Validation Error**
+    - Missing required fields
+    - Invalid enum values (e.g., `legal_entity`, `incorporation_state`)
+    - Improperly formatted data (email, SSN, EIN patterns)
+
+    ---
+
+    ## Best Practices
+
+    ### Security
+
+    - **Store credentials securely** - Use environment variables or secure vaults
+    - **Use HTTPS only** - Never make requests over HTTP
+    - **Rotate secrets regularly** - Contact Onramp to update credentials
+    - **Validate input** - Sanitize data before sending to the API
+    - **Protect sensitive data** - Handle SSNs, EINs, and personal information with care
+
+    ### Token Management
+
+    - **Cache tokens** - Reuse tokens instead of generating new ones for each request
+    - **Handle expiration** - Implement retry logic with token refresh on 401 errors
+    - **Monitor usage** - Track API calls for debugging and optimization
+
+    ### Data Quality
+
+    - **Provide accurate sales data** - More data leads to better prequalification
+    - **Use consistent formats** - Follow the specified date and number formats
+    - **Include all platforms** - Submit data for all relevant sales channels
+    - **Complete business information** - More details enable faster processing
+
+    ### Error Recovery
+
+    - **Implement retries** - Use exponential backoff for transient failures
+    - **Log errors** - Maintain logs for troubleshooting
+    - **Validate before sending** - Client-side validation reduces error rates
+
+    ---
+
+    ## Support
+
+    For questions, issues, or to request partner credentials:
+
+    - **Technical Support** - Contact your Onramp partner representative
+    - **Documentation** - Refer to the endpoint details below
+
+    ---
+
+    ## API Endpoints
+
+    Detailed documentation for each endpoint is provided below.
   version: 1.0.0
 servers:
-  - url: https://app.onrampfunds.com/partners/api
+  - url: https://app.onrampfunds.com/
     description: Production Server
 paths:
   /partners/api/tokens:
