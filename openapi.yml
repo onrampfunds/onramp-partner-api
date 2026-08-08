@@ -83,7 +83,8 @@ info:
     - **Embedded card** — `GET /partners/api/embed/prequalifications`.
       Returns the configuration that `@onrampfunds/embed` renders directly
       in your own page, so the merchant sees their amount without leaving
-      it. Three parameters, and no applicant PII is collected.
+      it. Three required parameters, and none of the sensitive applicant
+      data the referral path collects.
 
     The steps that follow describe the referral hand-over. For the card,
     see `GET /partners/api/embed/prequalifications` below.
@@ -1008,10 +1009,14 @@ paths:
         it is shaped for the card, and is not a general prequalification
         resource.
 
-        Three parameters, and none of them are applicant PII. The referral
-        endpoint accepts EIN, SSNs and addresses; this path neither
-        collects nor returns them, so a card rendered in your page has no
-        personal data to protect.
+        Three required parameters, plus an optional `business_name`. None
+        of the sensitive applicant data the referral path collects appears
+        here: that endpoint accepts EIN, SSNs and addresses, and this one
+        neither asks for them nor returns them.
+
+        `seller_email` is personal data and should be handled as such, but
+        it is the only such field, and no response echoes it back — even
+        when the record found already holds a full referral payload.
 
         ## Find-or-create, keyed on the seller's email
 
@@ -1141,6 +1146,12 @@ paths:
                   description: |
                     Sales totals for the channel. Accepted keys are
                     `90_days`, `180_days`, or a month in `YYYYMM` format.
+
+                    Optional on any individual platform, because the
+                    requirement is on the total: the figures summed across
+                    every platform must come to more than zero. A request
+                    in which nothing reports sales is rejected with a
+                    `422`. Send it for each platform that has sales.
                   additionalProperties:
                     type: number
                   example:
@@ -1315,6 +1326,12 @@ paths:
 
             Note that the envelope and the `errors` keys are `snake_case`
             even though a successful response is `camelCase`.
+          headers:
+            Cache-Control:
+              description: Always `no-store`. This response must not be cached.
+              schema:
+                type: string
+                example: "no-store"
           content:
             application/json:
               schema:
@@ -1372,7 +1389,16 @@ paths:
                       operating_state:
                         - "must be two character US state code"
         "401":
-          description: Unauthorized, invalid or missing JWT token.
+          description: |
+            Unauthorized, invalid or missing JWT token. Caching is
+            forbidden ahead of authentication, so a rejected request is no
+            more cacheable than an accepted one.
+          headers:
+            Cache-Control:
+              description: Always `no-store`. This response must not be cached.
+              schema:
+                type: string
+                example: "no-store"
           content:
             application/json:
               schema:
@@ -1389,6 +1415,12 @@ paths:
                     example: "Invalid client"
         "500":
           description: Internal server error.
+          headers:
+            Cache-Control:
+              description: Always `no-store`. This response must not be cached.
+              schema:
+                type: string
+                example: "no-store"
           content:
             application/json:
               schema:
