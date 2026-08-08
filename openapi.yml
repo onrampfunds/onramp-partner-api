@@ -74,6 +74,20 @@ info:
 
     ## API Workflow
 
+    There are two ways to integrate. They are separate paths, not steps in
+    one flow:
+
+    - **Referral hand-over** — `POST /partners/api/referrals`. Your server
+      submits a seller's details and receives a prequalified amount plus a
+      referral URL to send them to. This is the workflow described below.
+    - **Embedded card** — `GET /partners/api/embed/prequalifications`.
+      Returns the configuration that `@onrampfunds/embed` renders directly
+      in your own page, so the merchant sees their amount without leaving
+      it. Three parameters, and no applicant PII is collected.
+
+    The steps that follow describe the referral hand-over. For the card,
+    see `GET /partners/api/embed/prequalifications` below.
+
     ### Step-by-Step Guide
 
     **Step 1: Generate Authentication Token**
@@ -134,11 +148,14 @@ info:
       "business_name": "Example Business Inc",
       "legal_entity": "llc",
       "incorporation_state": "CA",
-      "prequalified_amount": 15000.00,
+      "prequalified_amount": 23000.00,
       "referral_url": "https://app.onrampfunds.com/partners/referrals/...",
       "correlation_id": "065a417b-ce17-4c64-b8dd-e35a3128a021"
     }
     ```
+
+    The amount follows from the 90-day sales total in the request: 50% of
+    $45,000 is $22,500, rounded up to the nearest $1,000.
 
     ### Using the Referral URL
 
@@ -210,6 +227,59 @@ info:
       "202403": 18000.00
     }
     ```
+
+    ### How Sales Are Aggregated
+
+    Whatever you send, each platform resolves to a single 90-day sales
+    figure, and those figures are then summed across platforms. The first
+    of these that is present wins:
+
+    1. `90_days`, used as given
+    2. `180_days`, halved
+    3. The three most recent `YYYYMM` months, excluding the current
+       (partial) month
+
+    Sending both `90_days` and monthly data is fine — `90_days` simply
+    takes precedence.
+
+    ---
+
+    ## Request and Response Casing
+
+    ### Requests accept either case
+
+    Every endpoint accepts **both `snake_case` and `camelCase`** request
+    keys and normalises them server-side. `sellerEmail` and `seller_email`
+    are the same parameter, and mixing the two styles within a single
+    request is allowed.
+
+    Sales period keys are not affected by this normalisation. Send
+    `90_days`, `180_days`, and `YYYYMM` keys exactly as documented,
+    whichever style you use for everything else.
+
+    ### Responses do not all use the same case
+
+    **Response casing differs by endpoint. This is deliberate, not an
+    oversight:**
+
+    | Endpoint | Response case |
+    |----------|---------------|
+    | `POST /partners/api/tokens` | `snake_case` |
+    | `POST /partners/api/referrals` | `snake_case` |
+    | `GET /partners/api/embed/prequalifications` | **`camelCase`** |
+
+    Each response matches its consumer. The token and referral responses
+    are read by your server alongside the rest of this API, so they stay
+    `snake_case`. The embed prequalification response is passed to
+    `@onrampfunds/embed`'s `mount()`, which expects `camelCase` — serving
+    it in `snake_case` would oblige every partner to write the same
+    key-mapping layer before forwarding it, and a mapping layer between a
+    response and its only consumer is a place for the two to drift apart.
+
+    **Error responses are always `snake_case`**, on every endpoint,
+    including the embed one. The `errors` object is keyed by parameter
+    name in `snake_case` (for example `seller_email`) no matter which
+    case you sent.
 
     ---
 
@@ -299,7 +369,7 @@ info:
     ## API Endpoints
 
     Detailed documentation for each endpoint is provided below.
-  version: 1.0.0
+  version: 1.1.0
 servers:
   - url: https://app.onrampfunds.com/
     description: Production Server
@@ -928,6 +998,411 @@ paths:
                   message:
                     type: string
                     example: "An unexpected error occurred."
+
+  /partners/api/embed/prequalifications:
+    get:
+      summary: Prequalify a merchant for the embedded card
+      description: |
+        Returns the configuration consumed by the `@onrampfunds/embed`
+        package's `mount()`. Forward the response body through unmodified:
+        it is shaped for the card, and is not a general prequalification
+        resource.
+
+        Three parameters, and none of them are applicant PII. The referral
+        endpoint accepts EIN, SSNs and addresses; this path neither
+        collects nor returns them, so a card rendered in your page has no
+        personal data to protect.
+
+        ## Find-or-create, keyed on the seller's email
+
+        Requests are keyed on `(your partner account, seller_email)`. The
+        first call for a merchant creates the record; every later call
+        returns that same record and the same `correlationId`. Repeat
+        calls are the expected pattern rather than an error — the card
+        renders on every page load, and each render is counted.
+
+        ## Responses are camelCase
+
+        Unlike `POST /partners/api/referrals`, which responds in
+        `snake_case`, this endpoint responds in `camelCase` so the body
+        forwards into `mount()` without a key-mapping layer. Requests
+        still accept either case. See **Request and Response Casing**
+        above for why the two differ.
+
+        ## A 200 does not guarantee an amount
+
+        When `amount` is `null` the merchant cannot be served. This is a
+        **success, not an error**: `mount()` returns `null`, renders
+        nothing, and yields the slot back to your page, so you can lay out
+        around its absence.
+
+        The no-amount response carries only `correlationId`, `amount`,
+        `currency`, and `lexicon`. There is no `applyUrl`, `copy`, or
+        `theme`, because nothing is rendered and so no regulated wording
+        is owed.
+
+        Two situations produce it:
+
+        - The merchant's `operating_state` is one Onramp does not operate
+          in. `lexicon` is `null` in this case.
+        - The merchant's 90-day sales fall below the qualifying threshold.
+          `lexicon` is populated.
+
+        **Missing or zero sales are a `422`, not a null amount.** The
+        distinction is the point: answering `null` to a request that
+        reported no sales would let a broken integration look
+        indistinguishable from a merchant who genuinely does not qualify,
+        and you would have no signal that anything was wrong.
+
+        ## How the amount is calculated
+
+        50% of the 90-day sales total, rounded **up** to the nearest
+        $1,000, capped at $500,000. Merchants below $22,500 in 90-day
+        sales receive the no-amount response rather than a floored figure.
+
+        See **How Sales Are Aggregated** above for how the 90-day total is
+        derived when you send `180_days` or monthly figures instead.
+
+        ## Caching
+
+        Every response carries `Cache-Control: no-store`, including
+        rejected ones. The body holds a merchant-specific amount and
+        regulated copy with no expiry field to bound its staleness, and
+        each call is also recorded as an impression. A cached response
+        therefore both shows a stale figure and silently drops renders
+        from reporting. Do not cache it, and do not place it behind a
+        proxy that ignores the header.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: seller_email
+          in: query
+          required: true
+          description: |
+            The merchant's email address. This is the find-or-create key,
+            scoped to your partner account. Also accepted as `sellerEmail`.
+          schema:
+            type: string
+            format: email
+          example: "merchant@example.com"
+        - name: operating_state
+          in: query
+          required: true
+          description: |
+            The state the business operates in, as a two character US state
+            code. This resolves both the `lexicon` and whether Onramp can
+            serve the merchant at all — a state Onramp does not operate in
+            returns the no-amount response. Also accepted as
+            `operatingState`.
+          schema:
+            type: string
+            enum: ["AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN", "MO", "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", "OH", "OK", "OR", "PA", "PR", "RI", "SC", "SD", "TN", "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY"]
+          example: "TX"
+        - name: platforms
+          in: query
+          required: true
+          description: |
+            The merchant's sales channels and their reported sales. At
+            least one platform with a recognised `type` is required, and
+            the reported sales must total more than zero.
+
+            Nested parameters use Rails bracket notation in the query
+            string. A single-platform request looks like:
+
+            ```
+            GET /partners/api/embed/prequalifications
+              ?seller_email=merchant%40example.com
+              &operating_state=TX
+              &platforms[][type]=shopify
+              &platforms[][seller_id]=seller-1
+              &platforms[][sales][90_days]=45000.0
+            ```
+
+            `seller_id` is also accepted as `sellerId`.
+          schema:
+            type: array
+            minItems: 1
+            items:
+              type: object
+              required:
+                - type
+                - seller_id
+              properties:
+                type:
+                  type: string
+                  description: The sales channel (e.g., Shopify, Amazon).
+                  example: "shopify"
+                seller_id:
+                  type: string
+                  description: The merchant's identifier on that channel.
+                  example: "seller-1"
+                sales:
+                  type: object
+                  description: |
+                    Sales totals for the channel. Accepted keys are
+                    `90_days`, `180_days`, or a month in `YYYYMM` format.
+                  additionalProperties:
+                    type: number
+                  example:
+                    90_days: 45000.0
+        - name: business_name
+          in: query
+          required: false
+          description: |
+            The merchant's business name, recorded against the lead. It
+            does not affect the amount and is not returned in the response.
+            Omitting it on a repeat call leaves any previously stored value
+            in place. Also accepted as `businessName`.
+          schema:
+            type: string
+          example: "Example Business Inc"
+      responses:
+        "200":
+          description: |
+            The card's mount configuration. Note that a `200` carrying
+            `amount: null` is a successful response meaning the merchant
+            cannot be served — see the endpoint description above.
+          headers:
+            Cache-Control:
+              description: Always `no-store`. This response must not be cached.
+              schema:
+                type: string
+                example: "no-store"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correlationId:
+                    type: string
+                    format: uuid
+                    description: |
+                      Stable identifier for this merchant's record. The same
+                      value is returned by every subsequent call for the
+                      same `seller_email`. Quote it when contacting support.
+                    example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
+                  amount:
+                    type: [number, "null"]
+                    description: |
+                      The prequalified amount, in whole currency units.
+                      `null` means the merchant cannot be served and the
+                      card renders nothing.
+                    example: 23000.0
+                  currency:
+                    type: string
+                    description: ISO 4217 currency code for `amount`.
+                    example: "USD"
+                  applyUrl:
+                    type: string
+                    format: url
+                    description: |
+                      Where the card's call to action sends the merchant to
+                      begin an application. **Absent** from the no-amount
+                      response.
+                    example: "https://app.onrampfunds.com/partners/prequalifications/065a417b-ce17-4c64-b8dd-e35a3128a021"
+                  lexicon:
+                    type: [string, "null"]
+                    enum: ["loan", "mca", null]
+                    description: |
+                      Which product vocabulary applies in the merchant's
+                      state, and therefore which wording the card renders.
+                      `null` when the state is not one Onramp operates in.
+                    example: "loan"
+                  copy:
+                    type: object
+                    description: |
+                      The regulated strings the card must display. All three
+                      are present whenever `amount` is non-null — the embed
+                      package refuses a response missing any of them and
+                      renders nothing. **Absent** from the no-amount
+                      response.
+
+                      Render these verbatim. They are served rather than
+                      compiled into the package precisely so that a wording
+                      correction reaches every partner without a release or
+                      any action on your part; substituting your own text
+                      defeats that.
+                    properties:
+                      qualifier:
+                        type: string
+                        description: States that the figure is not an approval.
+                        example: "Pre-qualified, not approved."
+                      mechanism:
+                        type: string
+                        description: How repayment or remittance works.
+                        example: "Repaid automatically as a share of your daily sales."
+                      disclosure:
+                        type: string
+                        description: |
+                          What the figure does not commit either party to.
+                          The wording differs by `lexicon`.
+                        example: "Not an offer of credit. Subject to review prior to approval."
+                  theme:
+                    type: object
+                    description: |
+                      Presentation tokens for the card. **Absent** from the
+                      no-amount response. Further tokens may be added over
+                      time, so pass this object through rather than
+                      destructuring it.
+                    additionalProperties: true
+                    properties:
+                      accent:
+                        type: string
+                        description: Accent colour, as a hex value.
+                        example: "#1f6feb"
+              examples:
+                prequalified:
+                  summary: A merchant who qualifies
+                  description: |
+                    $45,000 in 90-day sales: 50% is $22,500, rounded up to
+                    the nearest $1,000.
+                  value:
+                    correlationId: "065a417b-ce17-4c64-b8dd-e35a3128a021"
+                    amount: 23000.0
+                    currency: "USD"
+                    applyUrl: "https://app.onrampfunds.com/partners/prequalifications/065a417b-ce17-4c64-b8dd-e35a3128a021"
+                    lexicon: "loan"
+                    copy:
+                      qualifier: "Pre-qualified, not approved."
+                      mechanism: "Repaid automatically as a share of your daily sales."
+                      disclosure: "Not an offer of credit. Subject to review prior to approval."
+                    theme:
+                      accent: "#1f6feb"
+                cashAdvanceState:
+                  summary: A merchant in a cash advance state
+                  description: |
+                    The `mca` lexicon changes the wording: an advance is
+                    remitted rather than repaid, and what it disclaims is a
+                    commitment to purchase rather than an offer of credit.
+                  value:
+                    correlationId: "3f1d9c02-8a44-4f7e-9b1a-7c6f0d2e5b83"
+                    amount: 23000.0
+                    currency: "USD"
+                    applyUrl: "https://app.onrampfunds.com/partners/prequalifications/3f1d9c02-8a44-4f7e-9b1a-7c6f0d2e5b83"
+                    lexicon: "mca"
+                    copy:
+                      qualifier: "Pre-qualified, not approved."
+                      mechanism: "Remitted automatically as a share of your daily sales."
+                      disclosure: "Not a commitment to purchase. Subject to review prior to approval."
+                    theme:
+                      accent: "#1f6feb"
+                unsupportedState:
+                  summary: No amount — a state Onramp does not operate in
+                  description: |
+                    A real merchant Onramp cannot serve. `lexicon` is `null`
+                    because no agreement type applies in their state.
+                  value:
+                    correlationId: "0f2c8b91-4d3a-4c15-8e77-2a9b6f1c4d0e"
+                    amount: null
+                    currency: "USD"
+                    lexicon: null
+                belowThreshold:
+                  summary: No amount — sales below the qualifying threshold
+                  description: |
+                    Sales were reported, so this is not an integration
+                    error; they were simply under $22,500 across 90 days.
+                    `lexicon` is populated because the state is supported.
+                  value:
+                    correlationId: "8b4e1f57-6c2d-4a90-b3e8-51d7c0a2f9b6"
+                    amount: null
+                    currency: "USD"
+                    lexicon: "loan"
+        "422":
+          description: |
+            The request could not be processed. This is an integration
+            error rather than a decline — a merchant who does not qualify
+            receives a `200` with a null amount, never a `422`.
+
+            Note that the envelope and the `errors` keys are `snake_case`
+            even though a successful response is `camelCase`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 422
+                  error:
+                    type: string
+                    example: "validation_error"
+                  message:
+                    type: string
+                    example: "Validation failed"
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+              examples:
+                noSalesReported:
+                  summary: No sales reported
+                  description: |
+                    Sales totalling zero, or platforms carrying no sales at
+                    all. Returning a null amount here would let a broken
+                    integration pass for a merchant who does not qualify.
+                  value:
+                    status: 422
+                    error: "validation_error"
+                    message: "Validation failed"
+                    errors:
+                      platforms:
+                        - "must report sales greater than 0"
+                missingSellerEmail:
+                  summary: Missing seller email
+                  value:
+                    status: 422
+                    error: "validation_error"
+                    message: "Validation failed"
+                    errors:
+                      seller_email:
+                        - "can't be blank"
+                invalidOperatingState:
+                  summary: Unrecognised state code
+                  description: |
+                    A code that is not a US state at all. A valid code for a
+                    state Onramp does not operate in is a `200` with a null
+                    amount instead.
+                  value:
+                    status: 422
+                    error: "validation_error"
+                    message: "Validation failed"
+                    errors:
+                      operating_state:
+                        - "must be two character US state code"
+        "401":
+          description: Unauthorized, invalid or missing JWT token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 401
+                  error:
+                    type: string
+                    example: "unauthorized"
+                  message:
+                    type: string
+                    example: "Invalid client"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 500
+                  error:
+                    type: string
+                    example: "internal_server_error"
+                  message:
+                    type: string
+                    example: "An internal server error occurred"
 components:
   securitySchemes:
     bearerAuth:
