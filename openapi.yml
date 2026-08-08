@@ -1182,85 +1182,144 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  correlationId:
-                    type: string
-                    format: uuid
-                    description: |
-                      Stable identifier for this merchant's record. The same
-                      value is returned by every subsequent call for the
-                      same `seller_email`. Quote it when contacting support.
-                    example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
-                  amount:
-                    type: [number, "null"]
-                    description: |
-                      The prequalified amount, in whole currency units.
-                      `null` means the merchant cannot be served and the
-                      card renders nothing.
-                    example: 23000.0
-                  currency:
-                    type: string
-                    description: ISO 4217 currency code for `amount`.
-                    example: "USD"
-                  applyUrl:
-                    type: string
-                    format: url
-                    description: |
-                      Where the card's call to action sends the merchant to
-                      begin an application. **Absent** from the no-amount
-                      response.
-                    example: "https://app.onrampfunds.com/partners/prequalifications/065a417b-ce17-4c64-b8dd-e35a3128a021"
-                  lexicon:
-                    type: [string, "null"]
-                    enum: ["loan", "mca", null]
-                    description: |
-                      Which product vocabulary applies in the merchant's
-                      state, and therefore which wording the card renders.
-                      `null` when the state is not one Onramp operates in.
-                    example: "loan"
-                  copy:
+                oneOf:
+                  - title: Prequalified
                     type: object
                     description: |
-                      The regulated strings the card must display. All three
-                      are present whenever `amount` is non-null — the embed
-                      package refuses a response missing any of them and
-                      renders nothing. **Absent** from the no-amount
-                      response.
-
-                      Render these verbatim. They are served rather than
-                      compiled into the package precisely so that a wording
-                      correction reaches every partner without a release or
-                      any action on your part; substituting your own text
-                      defeats that.
+                      The merchant qualifies. All seven keys are present.
+                      This is the object to forward into `mount()`.
+                    required:
+                      - correlationId
+                      - amount
+                      - currency
+                      - applyUrl
+                      - lexicon
+                      - copy
+                      - theme
                     properties:
-                      qualifier:
+                      correlationId:
                         type: string
-                        description: States that the figure is not an approval.
-                        example: "Pre-qualified, not approved."
-                      mechanism:
+                        format: uuid
+                        description: |
+                          Stable identifier for this merchant's record. The
+                          same value is returned by every subsequent call
+                          for the same `seller_email`. Quote it when
+                          contacting support.
+                        example: "065a417b-ce17-4c64-b8dd-e35a3128a021"
+                      amount:
+                        type: number
+                        description: |
+                          The prequalified amount, in whole currency units.
+                          Never zero in this variant: an amount of zero is
+                          the absence of an offer rather than a small one,
+                          and is returned as the no-amount shape.
+                        example: 23000.0
+                      currency:
                         type: string
-                        description: How repayment or remittance works.
-                        example: "Repaid automatically as a share of your daily sales."
-                      disclosure:
+                        description: ISO 4217 currency code for `amount`.
+                        example: "USD"
+                      applyUrl:
+                        type: string
+                        format: url
+                        description: |
+                          Where the card's call to action sends the merchant
+                          to begin an application.
+                        example: "https://app.onrampfunds.com/partners/prequalifications/065a417b-ce17-4c64-b8dd-e35a3128a021"
+                      lexicon:
+                        type: string
+                        enum: ["loan", "mca"]
+                        description: |
+                          Which product vocabulary applies in the merchant's
+                          state, and therefore which wording the card
+                          renders. Always populated here, because an amount
+                          is only offered in a state Onramp operates in.
+                        example: "loan"
+                      copy:
+                        type: object
+                        description: |
+                          The regulated strings the card must display. All
+                          three are always present in this variant — the
+                          embed package refuses a response missing any of
+                          them and renders nothing.
+
+                          Render these verbatim. They are served rather than
+                          compiled into the package precisely so that a
+                          wording correction reaches every partner without a
+                          release or any action on your part; substituting
+                          your own text defeats that.
+                        required:
+                          - qualifier
+                          - mechanism
+                          - disclosure
+                        properties:
+                          qualifier:
+                            type: string
+                            description: States that the figure is not an approval.
+                            example: "Pre-qualified, not approved."
+                          mechanism:
+                            type: string
+                            description: How repayment or remittance works.
+                            example: "Repaid automatically as a share of your daily sales."
+                          disclosure:
+                            type: string
+                            description: |
+                              What the figure does not commit either party
+                              to. The wording differs by `lexicon`.
+                            example: "Not an offer of credit. Subject to review prior to approval."
+                      theme:
+                        type: object
+                        description: |
+                          Presentation tokens for the card. Further tokens
+                          may be added over time, so pass this object
+                          through rather than destructuring it.
+                        additionalProperties: true
+                        properties:
+                          accent:
+                            type: string
+                            description: Accent colour, as a hex value.
+                            example: "#1f6feb"
+                  - title: No amount
+                    type: object
+                    description: |
+                      The merchant cannot be served. Four keys, and
+                      `applyUrl`, `copy` and `theme` are absent rather than
+                      null — nothing is rendered, so no regulated wording is
+                      owed. `mount()` returns `null` and yields the slot
+                      back to your page.
+                    required:
+                      - correlationId
+                      - amount
+                      - currency
+                      - lexicon
+                    properties:
+                      correlationId:
+                        type: string
+                        format: uuid
+                        description: |
+                          Stable identifier for this merchant's record,
+                          returned here as it is for a qualifying merchant.
+                          The render is still recorded.
+                        example: "0f2c8b91-4d3a-4c15-8e77-2a9b6f1c4d0e"
+                      amount:
+                        type: "null"
+                        description: |
+                          Always `null` in this variant. This is a success,
+                          not an error — see the endpoint description.
+                      currency:
                         type: string
                         description: |
-                          What the figure does not commit either party to.
-                          The wording differs by `lexicon`.
-                        example: "Not an offer of credit. Subject to review prior to approval."
-                  theme:
-                    type: object
-                    description: |
-                      Presentation tokens for the card. **Absent** from the
-                      no-amount response. Further tokens may be added over
-                      time, so pass this object through rather than
-                      destructuring it.
-                    additionalProperties: true
-                    properties:
-                      accent:
-                        type: string
-                        description: Accent colour, as a hex value.
-                        example: "#1f6feb"
+                          ISO 4217 currency code. Present even with no
+                          amount to price.
+                        example: "USD"
+                      lexicon:
+                        type: [string, "null"]
+                        enum: ["loan", "mca", null]
+                        description: |
+                          `null` when the merchant's state is not one Onramp
+                          operates in. **Populated** when the state is fine
+                          and only the sales figure fell short, so this is
+                          how the two no-amount causes are told apart.
+                        example: "loan"
               examples:
                 prequalified:
                   summary: A merchant who qualifies
