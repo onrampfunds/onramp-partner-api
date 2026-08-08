@@ -83,8 +83,8 @@ info:
     - **Embedded card** — `GET /partners/api/embed/prequalifications`.
       Returns the configuration that `@onrampfunds/embed` renders directly
       in your own page, so the merchant sees their amount without leaving
-      it. Three required parameters, and none of the sensitive applicant
-      data the referral path collects.
+      it. Three required parameters plus an optional business name, and
+      none of the sensitive applicant data the referral path collects.
 
     The steps that follow describe the referral hand-over. For the card,
     see `GET /partners/api/embed/prequalifications` below.
