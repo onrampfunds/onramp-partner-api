@@ -136,8 +136,7 @@ info:
           "type": "shopify",
           "seller_id": "shop_12345",
           "sales": {
-            "90_days": 45000.00,
-            "180_days": 85000.00
+            "90_days": 45000.00
           }
         }]
       }'
@@ -213,16 +212,28 @@ info:
 
     ## Sales Data Format
 
-    The `sales` field in platform objects accepts flexible time periods:
+    The `sales` object on a platform carries that channel's sales in one
+    of three representations:
 
-    - **Aggregate periods**: `90_days`, `180_days`
-    - **Monthly data**: Use `YYYYMM` format (e.g., `"202401"` for January 2024)
+    | Representation | Keys | How it is read |
+    | -- | -- | -- |
+    | 90-day total | `90_days` | Used as given |
+    | 180-day total | `180_days` | **Halved**, as a 90-day proxy |
+    | Monthly series | `YYYYMM` | Three most recent months, summed |
 
-    **Example:**
+    **Send one representation per platform.** They are alternatives, not
+    inputs to be combined — see *How Sales Are Aggregated* below.
+
+    **A 90-day total:**
     ```json
     "sales": {
-      "90_days": 45000.00,
-      "180_days": 85000.00,
+      "90_days": 45000.00
+    }
+    ```
+
+    **A monthly series:**
+    ```json
+    "sales": {
       "202401": 12000.00,
       "202402": 15000.00,
       "202403": 18000.00
@@ -231,17 +242,46 @@ info:
 
     ### How Sales Are Aggregated
 
-    Whatever you send, each platform resolves to a single 90-day sales
-    figure, and those figures are then summed across platforms. The first
-    of these that is present wins:
+    Each platform resolves to a single 90-day figure, and those figures
+    are summed across platforms. Within one platform the **first match
+    wins, and the remaining keys are never read**:
 
-    1. `90_days`, used as given
-    2. `180_days`, halved
-    3. The three most recent `YYYYMM` months, excluding the current
-       (partial) month
+    1. `90_days` — used as given
+    2. otherwise `180_days` — multiplied by 0.5, as a 90-day proxy
+    3. otherwise the `YYYYMM` months — sorted newest first, the current
+       month dropped, and the **top three summed**
 
-    Sending both `90_days` and monthly data is fine — `90_days` simply
-    takes precedence.
+    Three consequences are worth stating outright, because each has a
+    plausible reading that is wrong:
+
+    - **`180_days` does not yield a larger amount.** It is halved. If you
+      hold both windows, send `90_days` — sending the wider one produces
+      an estimate from half of it.
+    - **Sending more than three months does not widen the window.** Three
+      are used; the rest are ignored. Twelve months of history and three
+      months of history give the same answer.
+    - **The current month is always dropped**, since it is still partial.
+      A series running to the current month contributes the three months
+      before it.
+
+    Sending an aggregate *and* a series is accepted, but the series is
+    dead weight — the aggregate wins and the months are never read. It
+    does not make the estimate more accurate or more robust.
+
+    ### Platforms Onramp Does Not Recognise
+
+    A platform whose `type` is not recognised contributes **zero**, and
+    nothing in the response says it was skipped. At least one platform
+    must carry a recognised storefront type, or the request is rejected
+    with a `422` — and that error lists the accepted values, which is the
+    most reliable way to check a `type` you are unsure about.
+
+    A request that clears that bar can still carry unrecognised platforms
+    alongside the valid one, and those contribute nothing. So a `422`
+    reading `must report sales greater than 0` can arrive on a request
+    that plainly contains sales: the message describes the **total after
+    unrecognised platforms are dropped**, not the figures you sent. If you
+    see it and your figures look right, check the `type` values first.
 
     ---
 
@@ -512,7 +552,12 @@ paths:
                     properties:
                       type:
                         type: string
-                        description: The type of platform (e.g., Shopify, Amazon).
+                        description: |
+                          The type of platform (e.g., Shopify, Amazon). A
+                          type Onramp does not recognise contributes zero
+                          sales and is not reported back; at least one
+                          platform must carry a recognised storefront
+                          type.
                         example: "shopify"
                       seller_id:
                         type: string
@@ -520,14 +565,21 @@ paths:
                         example: "123"
                       sales:
                         type: object
-                        description: Sales data for the platform.
+                        description: |
+                          Sales for this platform, in **one** of three
+                          representations: `90_days`, `180_days`, or a
+                          series of `YYYYMM` months.
+
+                          They are alternatives rather than inputs to be
+                          combined. The first present wins and the rest
+                          are never read: `90_days` as given, else
+                          `180_days` halved, else the three most recent
+                          months excluding the current one. See *How
+                          Sales Are Aggregated* in the overview.
                         additionalProperties:
                           type: number
-                          description: Sales data for the period. Accepted keys are `90_days`, `180_days`, or a month in the `YYYYMM` format.
                         example:
                           90_days: 15000.50
-                          180_days: 30000.75
-                          "202301": 12000.30
                 user_provided_average_monthly_sales:
                   type: number
                   description: What are the average monthly sales for the business?
@@ -768,12 +820,17 @@ paths:
                           example: "123"
                         sales:
                           type: object
+                          description: |
+                            The sales recorded for this platform, in the
+                            representation that was submitted — `90_days`,
+                            `180_days`, or `YYYYMM` months. The single
+                            90-day figure the amount was derived from is
+                            not returned; see *How Sales Are Aggregated*
+                            in the overview for how it is computed.
                           additionalProperties:
                             type: number
-                            description: Sales data for the period. Accepted keys are `90_days`, `180_days`, or a month in the `YYYYMM` format.
                           example:
                             90_days: 15000.50
-                            "202301": 12000.30
                   referral_url:
                     type: string
                     format: url
@@ -1151,7 +1208,12 @@ paths:
               properties:
                 type:
                   type: string
-                  description: The sales channel (e.g., Shopify, Amazon).
+                  description: |
+                    The sales channel (e.g., Shopify, Amazon). A channel
+                    Onramp does not recognise contributes zero sales and
+                    is not reported back, so a typo here surfaces as a
+                    smaller amount than expected — or, if it was the only
+                    channel carrying sales, as a `422`.
                   example: "shopify"
                 seller_id:
                   type: string
@@ -1160,8 +1222,13 @@ paths:
                 sales:
                   type: object
                   description: |
-                    Sales totals for the channel. Accepted keys are
-                    `90_days`, `180_days`, or a month in `YYYYMM` format.
+                    Sales for the channel, in **one** of three
+                    representations: `90_days`, `180_days`, or a series of
+                    `YYYYMM` months. The first present wins and the rest
+                    are never read — `180_days` is halved, and a month
+                    series contributes its three most recent months
+                    excluding the current one. See *How Sales Are
+                    Aggregated* in the overview.
 
                     Optional on any individual platform, because the
                     requirement is on the total: the figures summed across
