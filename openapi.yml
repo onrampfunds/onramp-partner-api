@@ -56,9 +56,16 @@ info:
     **Response:**
     ```json
     {
-      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "token_type": "Bearer",
+      "expires_in": 3600,
+      "expires_at": 1770000000
     }
     ```
+
+    `expires_in` is a duration in seconds (per OAuth convention);
+    `expires_at` is the same expiry as an absolute Unix timestamp. Use
+    whichever your HTTP library expects, and refresh on a 401 either way.
 
     ### Using Your Token
 
@@ -120,7 +127,7 @@ info:
       -d '{
         "client_id": "YOUR_CLIENT_ID",
         "client_secret": "YOUR_CLIENT_SECRET"
-      }' | jq -r '.token')
+      }' | jq -r '.access_token')
 
     # Step 2: Create referral (minimal example)
     curl -X POST https://app.onrampfunds.com/partners/api/referrals \
@@ -328,6 +335,14 @@ info:
 
     The API uses standard HTTP status codes and returns detailed error information.
 
+    ### Request IDs
+
+    Every response — success or error — carries an `X-Request-Id`
+    header uniquely identifying that request. Log it alongside your own
+    request records and quote it when contacting support: it lets
+    Onramp find the exact request in server logs without any other
+    identifying detail.
+
     ### Common HTTP Status Codes
 
     | Status Code | Meaning | Action |
@@ -410,7 +425,7 @@ info:
     ## API Endpoints
 
     Detailed documentation for each endpoint is provided below.
-  version: 1.1.0
+  version: 1.2.0
 servers:
   - url: https://app.onrampfunds.com/
     description: Production Server
@@ -444,11 +459,33 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - access_token
+                  - token_type
+                  - expires_in
+                  - expires_at
                 properties:
-                  token:
+                  access_token:
                     type: string
                     description: The generated JWT token.
                     example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  token_type:
+                    type: string
+                    description: Always `Bearer`.
+                    example: "Bearer"
+                  expires_in:
+                    type: integer
+                    description: |
+                      Seconds until the token expires, per OAuth
+                      convention. Currently 3600 (one hour).
+                    example: 3600
+                  expires_at:
+                    type: integer
+                    description: |
+                      The same expiry as an absolute Unix timestamp,
+                      for clients that track expiry as a point in time
+                      rather than a countdown.
+                    example: 1770000000
         "401":
           description: Unauthorized, invalid client credentials.
           content:
@@ -464,7 +501,7 @@ paths:
                     example: "unauthorized"
                   message:
                     type: string
-                    example: "Client not authorized"
+                    example: "Invalid client ID or secret"
         "500":
           description: Internal server error.
           content:
