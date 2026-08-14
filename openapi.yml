@@ -425,7 +425,7 @@ info:
     ## API Endpoints
 
     Detailed documentation for each endpoint is provided below.
-  version: 1.2.0
+  version: 1.2.1
 servers:
   - url: https://app.onrampfunds.com/
     description: Production Server
@@ -871,8 +871,11 @@ paths:
                   referral_url:
                     type: string
                     format: url
-                    description: The referral URL.
-                    example: "https://app.onrampfunds.com/partners/referrals/2c9044f4-fb37-4e6e-a18b-23bab8270b80"
+                    description: |
+                      The referral URL. Its path segment is an opaque
+                      token, not the `correlation_id` — store the URL
+                      whole rather than deriving it.
+                    example: "https://app.onrampfunds.com/partners/referrals/3f2vKq8mDhRt6XyZbNwPcE4u"
                   seller_email:
                     type: string
                     format: email
@@ -1343,8 +1346,10 @@ paths:
                         format: url
                         description: |
                           Where the card's call to action sends the merchant
-                          to begin an application.
-                        example: "https://app.onrampfunds.com/partners/prequalifications/065a417b-ce17-4c64-b8dd-e35a3128a021"
+                          to begin an application. Its path segment is an
+                          opaque token, not the `correlationId` — pass the
+                          URL through whole rather than deriving it.
+                        example: "https://app.onrampfunds.com/partners/prequalifications/3f2vKq8mDhRt6XyZbNwPcE4u"
                       lexicon:
                         type: string
                         enum: ["loan", "mca"]
@@ -1450,7 +1455,7 @@ paths:
                     correlationId: "065a417b-ce17-4c64-b8dd-e35a3128a021"
                     amount: 23000.0
                     currency: "USD"
-                    applyUrl: "https://app.onrampfunds.com/partners/prequalifications/065a417b-ce17-4c64-b8dd-e35a3128a021"
+                    applyUrl: "https://app.onrampfunds.com/partners/prequalifications/3f2vKq8mDhRt6XyZbNwPcE4u"
                     lexicon: "loan"
                     copy:
                       qualifier: "Pre-qualified, not approved."
@@ -1468,7 +1473,7 @@ paths:
                     correlationId: "3f1d9c02-8a44-4f7e-9b1a-7c6f0d2e5b83"
                     amount: 23000.0
                     currency: "USD"
-                    applyUrl: "https://app.onrampfunds.com/partners/prequalifications/3f1d9c02-8a44-4f7e-9b1a-7c6f0d2e5b83"
+                    applyUrl: "https://app.onrampfunds.com/partners/prequalifications/9zYxWvUt7sRqPnMk5jHg3fDe"
                     lexicon: "mca"
                     copy:
                       qualifier: "Pre-qualified, not approved."
